@@ -1,40 +1,51 @@
--- SokaSafari Travel — catalog seed (locations, operators, routes).
+-- SokaSafari Travel — catalog seed (Tanzania-centric locations, operators, routes).
 -- Trips/fares/seats are generated per search date by the app's trip engine
 -- (lib/data/trips.ts); for a fully DB-backed deployment, generate trips for a
 -- rolling date window via a scheduled edge function using these routes.
 
+-- Locations (airports)
 insert into locations (code, name, city, country, country_code, type) values
-  ('CMN','Mohammed V Intl','Casablanca','Morocco','MA','airport'),
-  ('RBA','Rabat-Sale','Rabat','Morocco','MA','airport'),
-  ('RAK','Marrakesh Menara','Marrakesh','Morocco','MA','airport'),
-  ('TNG','Ibn Battouta','Tangier','Morocco','MA','airport'),
+  ('DAR','Julius Nyerere Intl','Dar es Salaam','Tanzania','TZ','airport'),
+  ('JRO','Kilimanjaro Intl','Kilimanjaro','Tanzania','TZ','airport'),
+  ('ZNZ','Abeid Amani Karume Intl','Zanzibar','Tanzania','TZ','airport'),
+  ('MWZ','Mwanza Airport','Mwanza','Tanzania','TZ','airport'),
+  ('ARK','Arusha Airport','Arusha','Tanzania','TZ','airport'),
   ('NBO','Jomo Kenyatta Intl','Nairobi','Kenya','KE','airport'),
-  ('LOS','Murtala Muhammed','Lagos','Nigeria','NG','airport'),
-  ('ACC','Kotoka Intl','Accra','Ghana','GH','airport'),
-  ('CAI','Cairo Intl','Cairo','Egypt','EG','airport'),
-  ('DKR','Blaise Diagne','Dakar','Senegal','SN','airport'),
-  ('ABJ','Felix-Houphouet','Abidjan','Cote dIvoire','CI','airport'),
-  ('ADD','Bole Intl','Addis Ababa','Ethiopia','ET','airport'),
-  ('JNB','O. R. Tambo','Johannesburg','South Africa','ZA','airport'),
-  ('CAS-BT','CTM Casablanca','Casablanca','Morocco','MA','bus_terminal'),
-  ('RBA-BT','Gare Routiere Rabat','Rabat','Morocco','MA','bus_terminal'),
-  ('RAK-BT','Gare Marrakesh','Marrakesh','Morocco','MA','bus_terminal'),
-  ('TNG-BT','Gare Tanger','Tangier','Morocco','MA','bus_terminal'),
-  ('FEZ-BT','Gare Fes','Fez','Morocco','MA','bus_terminal'),
-  ('NBO-BT','Machakos Country Bus','Nairobi','Kenya','KE','bus_terminal'),
-  ('MSA-BT','Mombasa Terminal','Mombasa','Kenya','KE','bus_terminal'),
-  ('KSM-BT','Kisumu Terminal','Kisumu','Kenya','KE','bus_terminal'),
-  ('KLA-BT','Kampala Coach Park','Kampala','Uganda','UG','bus_terminal')
+  ('EBB','Entebbe Intl','Kampala','Uganda','UG','airport'),
+  ('RBA','Bujumbura Intl','Bujumbura','Burundi','BI','airport'),
+  ('NIA','Ndjili Intl','Kinshasa','DRC','CD','airport'),
+  ('DXB','Dubai Intl','Dubai','UAE','AE','airport'),
+  ('CMN','Mohammed V Intl','Casablanca','Morocco','MA','airport'),
+  ('LOS','Murtala Muhammed','Lagos','Nigeria','NG','airport')
 on conflict (code) do nothing;
 
+-- Locations (bus terminals)
+insert into locations (code, name, city, country, country_code, type) values
+  ('DAR-BT','Ubungo Bus Terminal','Dar es Salaam','Tanzania','TZ','bus_terminal'),
+  ('ARU-BT','Arusha Bus Stand','Arusha','Tanzania','TZ','bus_terminal'),
+  ('MOS-BT','Moshi Bus Stand','Moshi','Tanzania','TZ','bus_terminal'),
+  ('DOD-BT','Dodoma Bus Terminal','Dodoma','Tanzania','TZ','bus_terminal'),
+  ('MWA-BT','Mwanza Bus Stand','Mwanza','Tanzania','TZ','bus_terminal'),
+  ('IRI-BT','Iringa Bus Stand','Iringa','Tanzania','TZ','bus_terminal'),
+  ('MBY-BT','Mbeya Bus Terminal','Mbeya','Tanzania','TZ','bus_terminal')
+on conflict (code) do nothing;
+
+-- Operators (airlines)
 insert into operators (code, name, mode, logo_color, rating) values
-  ('AT','Royal Air Maroc','flights','#C8102E',4.2),
+  ('TC','Air Tanzania','flights','#1B4F8A',4.2),
+  ('PW','Precision Air','flights','#E63946',4.1),
+  ('QC','Coastal Aviation','flights','#2A9D8F',4.3),
   ('KQ','Kenya Airways','flights','#C0392B',4.1),
   ('ET','Ethiopian Airlines','flights','#2E7D32',4.4),
-  ('MS','EgyptAir','flights','#1565C0',4.0),
-  ('SA','South African Airways','flights','#0A4DA2',4.0),
-  ('MC','Modern Coast','buses','#16A34A',4.3),
-  ('CTM','CTM Morocco','buses','#0EA5E9',4.2),
-  ('SUP','Supratours','buses','#F59E0B',4.1),
-  ('EAC','Easy Coach','buses','#7C3AED',4.0)
+  ('EK','Emirates','flights','#D4AF37',4.7)
+on conflict do nothing;
+
+-- Operators (buses)
+insert into operators (code, name, mode, logo_color, rating) values
+  ('TH','Tahmeed Coach','buses','#1B4F8A',4.3),
+  ('KE','Kilimanjaro Express','buses','#E63946',4.1),
+  ('SX','Scandinavian Express','buses','#2A9D8F',4.4),
+  ('DX','Dar Express','buses','#F59E0B',4.0),
+  ('RC','Royal Coach','buses','#7C3AED',4.2),
+  ('MC','Modern Coast','buses','#16A34A',4.3)
 on conflict do nothing;

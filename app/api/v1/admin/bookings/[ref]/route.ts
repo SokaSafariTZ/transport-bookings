@@ -1,7 +1,7 @@
 import { fail, ok, parseBody } from "@/lib/api";
 import { isAdminAuthed } from "@/lib/auth";
 import { bookingPatchSchema } from "@/lib/validation";
-import { updateBookingStatus } from "@/lib/data/store";
+import { updateBookingStatus } from "@/lib/data/booking-store";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,7 @@ export async function PATCH(
   const parsed = await parseBody(req, bookingPatchSchema);
   if ("response" in parsed) return parsed.response;
 
-  const booking = updateBookingStatus(ref, parsed.data);
+  const booking = await updateBookingStatus(ref, parsed.data);
   if (!booking) return fail("Booking not found", 404);
   return ok(booking);
 }

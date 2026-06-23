@@ -1,6 +1,6 @@
 import { fail, ok, parseBody } from "@/lib/api";
 import { createBookingSchema } from "@/lib/validation";
-import { createBooking } from "@/lib/data/store";
+import { createBooking } from "@/lib/data/booking-store";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   const parsed = await parseBody(req, createBookingSchema);
   if ("response" in parsed) return parsed.response;
 
-  const booking = createBooking(parsed.data);
+  const booking = await createBooking(parsed.data);
   if (!booking) return fail("Trip not found or no longer available", 404);
 
   return ok(booking, { status: 201 });

@@ -175,26 +175,10 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(59,158,255,0.18),transparent_70%)]" />
 
         <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center px-5 pt-24 pb-16 text-center">
-          {/* Logo mark — exactly as the app landing screen */}
-          <div className="mb-6 flex flex-col items-center gap-4">
-            <Image
-              src="/appicon.png"
-              alt="SokaSafari"
-              width={100}
-              height={100}
-              className="rounded-[22px] shadow-[0_8px_40px_rgba(245,197,66,0.45)] ring-1 ring-white/15"
-              priority
-            />
-            <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-7xl">
-              <span className="text-gold">Soka</span>
-              <span className="text-white">Safari</span>
-            </h1>
-          </div>
-
-          <p className="mx-auto max-w-2xl text-xl font-medium text-white/90 sm:text-2xl">
+          <h1 className="mx-auto max-w-2xl text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
             Your Ultimate Football &amp; Safari Experience
-          </p>
-          <p className="mx-auto mt-3 max-w-xl text-base text-white/70">
+          </h1>
+          <p className="mx-auto mt-4 max-w-xl text-base text-white/70">
             Book flights, buses, match tickets, eVisa and safaris — all in one place
             for football fans across Africa.
           </p>

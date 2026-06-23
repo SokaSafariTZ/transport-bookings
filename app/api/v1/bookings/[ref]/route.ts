@@ -1,5 +1,5 @@
 import { fail, ok } from "@/lib/api";
-import { getBooking } from "@/lib/data/store";
+import { getBooking } from "@/lib/data/booking-store";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ ref: string }> },
 ) {
   const { ref } = await params;
-  const booking = getBooking(ref);
+  const booking = await getBooking(ref);
   if (!booking) return fail("Booking not found", 404);
   return ok(booking);
 }

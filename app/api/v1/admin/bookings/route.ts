@@ -1,6 +1,6 @@
 import { ok } from "@/lib/api";
 import { isAdminAuthed } from "@/lib/auth";
-import { listBookings } from "@/lib/data/store";
+import { listBookings } from "@/lib/data/booking-store";
 
 export const dynamic = "force-dynamic";
 
@@ -8,5 +8,5 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   if (!(await isAdminAuthed()))
     return new Response("Unauthorized", { status: 401 });
-  return ok(listBookings());
+  return ok(await listBookings());
 }
