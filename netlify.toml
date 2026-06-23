@@ -1,0 +1,32 @@
+[build]
+  command   = "npm run build"
+  publish   = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# The Essential Next.js plugin wires up SSR, API routes, image optimisation,
+# and Edge Middleware on Netlify Functions + Netlify Edge Functions.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# ── Netlify Functions config ────────────────────────────────────────────────
+[functions]
+  # Keep the in-memory booking store warm between requests on the same instance.
+  # NOTE: globalThis state is per-function-instance and will reset on cold starts.
+  # Wire up Supabase env vars for production persistence (see .env.example).
+  node_bundler = "esbuild"
+
+# ── Security headers ────────────────────────────────────────────────────────
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options        = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy        = "strict-origin-when-cross-origin"
+    Permissions-Policy     = "camera=(), microphone=(), geolocation=()"
+
+[[headers]]
+  for = "/api/v1/*"
+  [headers.values]
+    Cache-Control = "no-store"
