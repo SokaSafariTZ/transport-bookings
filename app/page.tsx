@@ -184,15 +184,15 @@ export default function LandingPage() {
 
           {/* CTA row */}
           <div className="mt-8 flex items-center justify-center gap-3">
-            <Button asChild size="lg" className="shadow-[0_8px_32px_rgba(59,158,255,0.5)]">
+            <Button asChild size="lg" className="px-4 text-sm sm:px-7 sm:text-base shadow-[0_8px_32px_rgba(59,158,255,0.5)]">
               <Link href="/search?mode=flights">
-                <Plane className="size-5" />
+                <Plane className="size-4 sm:size-5" />
                 Search Flights
               </Link>
             </Button>
-            <Button asChild variant="secondary" size="lg">
+            <Button asChild variant="secondary" size="lg" className="px-4 text-sm sm:px-7 sm:text-base">
               <Link href="/search?mode=buses">
-                <Bus className="size-5" />
+                <Bus className="size-4 sm:size-5" />
                 Search Buses
               </Link>
             </Button>
