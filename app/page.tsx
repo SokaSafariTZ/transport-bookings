@@ -139,10 +139,10 @@ const FEATURES = [
 ];
 
 const STATS = [
-  { value: "20+", label: "Cities served" },
-  { value: "12", label: "Operators" },
-  { value: "50K+", label: "Fans served" },
-  { value: "4.4★", label: "App rating" },
+  { value: "0", label: "Cities served" },
+  { value: "0", label: "Operators" },
+  { value: "0", label: "Fans served" },
+  { value: "0", label: "App rating" },
 ];
 
 export default function LandingPage() {
@@ -179,12 +179,11 @@ export default function LandingPage() {
             Your Ultimate Football &amp; Safari Experience
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base text-white/70">
-            Book flights, buses, match tickets, eVisa and safaris — all in one place
-            for football fans across Africa.
+            Book flights, buses, match tickets, eVisa and safaris for football fans across Africa.
           </p>
 
           {/* CTA row */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-8 flex items-center justify-center gap-3">
             <Button asChild size="lg" className="shadow-[0_8px_32px_rgba(59,158,255,0.5)]">
               <Link href="/search?mode=flights">
                 <Plane className="size-5" />
@@ -204,9 +203,9 @@ export default function LandingPage() {
           </p>
 
           {/* Stats strip */}
-          <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="mt-12 grid grid-cols-4 gap-2 sm:gap-4">
             {STATS.map((s) => (
-              <div key={s.label} className="rounded-[16px] border border-white/12 bg-white/8 px-4 py-3 backdrop-blur-md">
+              <div key={s.label} className="rounded-[16px] border border-white/12 bg-white/8 px-2 py-3 backdrop-blur-md sm:px-4">
                 <p className="text-2xl font-extrabold text-white">{s.value}</p>
                 <p className="text-xs text-white/65">{s.label}</p>
               </div>
