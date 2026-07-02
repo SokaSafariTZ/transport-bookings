@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Ticket, DollarSign, Building2, MapPin, Plane, Bus, TrendingUp } from "lucide-react";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { Card, Badge } from "@/components/ui";
-import { listBookings } from "@/lib/data/store";
+import { listBookings } from "@/lib/data/booking-store";
 import { listOperators, listLocations } from "@/lib/data/catalog";
 import { formatMoney, formatDate } from "@/lib/utils";
 import { getAdminRole } from "@/lib/auth";
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
   const role = await getAdminRole();
-  const allBookings = listBookings();
+  const allBookings = await listBookings();
 
   const bookings =
     role === "flights" ? allBookings.filter((b) => b.mode === "flights")
