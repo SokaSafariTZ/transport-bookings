@@ -39,3 +39,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# org repo: never commit .env (use private fypfullrepo)
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# org repo: exclude local dev tooling
+.cursor/
+SKILLS/
+AGENTS.md
+CLAUDE.md
+.cursorrules
+jblaravelskills.md
+*.mdc
