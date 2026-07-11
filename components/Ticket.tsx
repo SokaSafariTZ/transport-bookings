@@ -1,6 +1,6 @@
 import { Plane, Bus, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui";
-import { formatDate, formatTime, formatDuration, formatMoney } from "@/lib/utils";
+import { formatDate, formatTime, formatDuration, formatMoneyDual } from "@/lib/utils";
 import type { BookingDetail } from "@/lib/types";
 
 export function Ticket({ booking }: { booking: BookingDetail }) {
@@ -52,7 +52,7 @@ export function Ticket({ booking }: { booking: BookingDetail }) {
         <Detail label="PNR" value={booking.pnr} mono />
         <Detail label="Date" value={formatDate(trip.departAt)} />
         <Detail label="Travellers" value={String(booking.passengerCount)} />
-        <Detail label="Total" value={formatMoney(booking.totalAmount, booking.currency)} />
+        <Detail label="Total" value={formatMoneyDual(booking.totalAmount)} />
       </div>
 
       <div className="px-5 pb-5">

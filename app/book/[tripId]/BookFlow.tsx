@@ -8,7 +8,7 @@ import { api } from "@/lib/api-client";
 import { Card, Field, Input, Select, Spinner, Badge } from "@/components/ui";
 import { Button } from "@/components/ui/Button";
 import { SeatMap } from "@/components/SeatMap";
-import { formatDuration, formatMoney, formatTime, formatDate } from "@/lib/utils";
+import { formatDuration, formatMoneyDual, formatTime, formatDate } from "@/lib/utils";
 import type { FareClass } from "@/lib/types";
 
 interface PassengerForm {
@@ -145,7 +145,7 @@ export function BookFlow({ tripId }: { tripId: string }) {
                     <span className="font-semibold text-title">{f.label}</span>
                     {active && <Check className="size-4 text-primary" />}
                   </div>
-                  <p className="mt-1 text-lg font-bold text-title">{formatMoney(f.price)}</p>
+                  <p className="mt-1 text-lg font-bold text-title">{formatMoneyDual(f.price)}</p>
                   <p className="text-[11px] text-subtitle">
                     {f.baggageKg}kg · {f.refundable ? "Refundable" : "Non-refundable"}
                   </p>
@@ -242,10 +242,10 @@ export function BookFlow({ tripId }: { tripId: string }) {
         <Card className="sticky top-20 p-4">
           <p className="text-sm font-semibold text-title">Price summary</p>
           <div className="mt-3 space-y-2 text-sm">
-            <Row label={`${fare?.label ?? "Fare"} × ${paxCount}`} value={formatMoney((fare?.price ?? 0) * paxCount)} />
+            <Row label={`${fare?.label ?? "Fare"} × ${paxCount}`} value={formatMoneyDual((fare?.price ?? 0) * paxCount)} />
             <Row label="Taxes & fees" value="Included" muted />
             <div className="my-2 h-px bg-line" />
-            <Row label="Total" value={formatMoney(total)} bold />
+            <Row label="Total" value={formatMoneyDual(total)} bold />
           </div>
           {create.isError && (
             <p className="mt-3 text-xs text-danger">{(create.error as Error).message}</p>

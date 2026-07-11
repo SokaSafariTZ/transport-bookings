@@ -7,7 +7,7 @@ import { CreditCard, Smartphone, Wallet, Lock } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { Card, Field, Input, Spinner, Badge } from "@/components/ui";
 import { Button } from "@/components/ui/Button";
-import { formatMoney, formatDate } from "@/lib/utils";
+import { formatMoneyDual, formatDate } from "@/lib/utils";
 
 const METHODS = [
   { key: "card", label: "Card", icon: CreditCard },
@@ -113,7 +113,7 @@ export function CheckoutFlow() {
           <div className="flex justify-between text-sm">
             <span className="text-subtitle">Total</span>
             <span className="text-lg font-bold text-title">
-              {formatMoney(booking.totalAmount, booking.currency)}
+              {formatMoneyDual(booking.totalAmount)}
             </span>
           </div>
           {pay.isError && (
@@ -124,7 +124,7 @@ export function CheckoutFlow() {
             disabled={pay.isPending}
             onClick={() => pay.mutate()}
           >
-            {pay.isPending ? <Spinner /> : `Pay ${formatMoney(booking.totalAmount)}`}
+            {pay.isPending ? <Spinner /> : `Pay ${formatMoneyDual(booking.totalAmount)}`}
           </Button>
         </Card>
       </aside>

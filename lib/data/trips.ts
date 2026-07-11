@@ -8,6 +8,7 @@ import {
   getLocationById,
   getOperatorById,
   ROUTES,
+  listRoutes,
   type RouteDef,
 } from "@/lib/data/catalog";
 
@@ -57,17 +58,18 @@ export function decodeTripId(id: string) {
   const origin = parts.slice(1, slotIdx - 1 - 1).join("-").replace(/-BT$/, "-BT"); // rejoin hyphenated codes
   const dest   = parts.slice(slotIdx - 1 - 1, slotIdx - 1)[0]; // see below
 
-  // Simpler rebuild: we know the route from matching against ROUTES
+  // Simpler rebuild: we know the route from matching against live routes
   const inner = parts.slice(1, slotIdx - 1); // everything between prefix and date
   // inner might be: ["DAR","ZNZ"] or ["DAR","BT","ARU","BT"] depending on how hyphens split
   // Reconstruct by matching against known routes
-  const route = ROUTES.find((r) => {
+  const liveRoutes = listRoutes();
+  const route = liveRoutes.find((r) => {
     const encoded = encodeTripId(r, date, slot, opId);
     return encoded === id;
   });
   if (!route) {
     // Fallback: match by scanning all routes that fit the prefix + date + slot + op
-    const fallback = ROUTES.find((r) => {
+    const fallback = liveRoutes.find((r) => {
       if (r.mode !== mode) return false;
       if (!r.operatorIds.includes(opId)) return false;
       const candidate = encodeTripId(r, date, slot, opId);
@@ -95,7 +97,6 @@ function buildTrip(route: RouteDef, date: string, slot: number, opId: string): T
   const isFlight = route.mode === "flights";
   const totalSeats = isFlight ? 150 + Math.floor(rnd() * 40) : 44 + Math.floor(rnd() * 12);
   const seatsAvailable = Math.max(2, Math.floor(totalSeats * (0.15 + rnd() * 0.6)));
-  const priceJitter = 0.85 + rnd() * 0.4;
 
   return {
     id,
@@ -110,7 +111,8 @@ function buildTrip(route: RouteDef, date: string, slot: number, opId: string): T
       : COACHES[Math.floor(rnd() * COACHES.length)],
     serviceNumber: `${op.code}${100 + Math.floor(rnd() * 800)}`,
     stops: route.stops,
-    basePrice: Math.round(route.basePrice * priceJitter),
+    // Exact admin-set route fare — no random jitter.
+    basePrice: Math.round(route.basePrice),
     currency: "USD",
     totalSeats,
     seatsAvailable,
@@ -144,7 +146,7 @@ export interface SearchQuery {
 }
 
 export function searchTrips(q: SearchQuery): TripWithRefs[] {
-  const routes = ROUTES.filter(
+  const routes = listRoutes().filter(
     (r) => r.mode === q.mode && r.originCode === q.from && r.destCode === q.to,
   );
   const trips: TripWithRefs[] = [];
@@ -175,7 +177,6 @@ const FARE_TABLE: Record<
 };
 
 export function getFares(trip: TripWithRefs): Fare[] {
-  const rnd = mulberry32(hashSeed(trip.id + "fares"));
   return FARE_TABLE[trip.mode].map((f, i) => ({
     id: `${trip.id}_fare_${f.fareClass}`,
     tripId: trip.id,

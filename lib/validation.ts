@@ -55,3 +55,8 @@ export const bookingPatchSchema = z.object({
   status: z.enum(["pending", "confirmed", "cancelled", "completed"]).optional(),
   paymentStatus: z.enum(["unpaid", "paid", "refunded", "failed"]).optional(),
 });
+
+export const routePricePatchSchema = z.object({
+  key: z.string().min(3),
+  basePrice: z.number().finite().min(1).max(100_000),
+});

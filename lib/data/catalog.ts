@@ -54,7 +54,12 @@ export interface RouteDef {
   stops: number;
 }
 
-export const ROUTES: RouteDef[] = [
+/** Stable key for a route (mode + origin + destination). */
+export function routeKey(route: Pick<RouteDef, "mode" | "originCode" | "destCode">): string {
+  return `${route.mode}:${route.originCode}:${route.destCode}`;
+}
+
+const DEFAULT_ROUTES: RouteDef[] = [
   // ── Domestic flights — Air Tanzania ───────────────────────────────────────
   { mode: "flights", operatorIds: ["op-tc"], originCode: "DAR", destCode: "ZNZ", minutes: 35, daily: 5, basePrice: 60, stops: 0 },
   { mode: "flights", operatorIds: ["op-tc"], originCode: "DAR", destCode: "JRO", minutes: 55, daily: 4, basePrice: 75, stops: 0 },
@@ -89,18 +94,35 @@ export const ROUTES: RouteDef[] = [
 
 declare global {
   // eslint-disable-next-line no-var
-  var __soka_catalog: { locations: Location[]; operators: Operator[] } | undefined;
+  var __soka_catalog:
+    | { locations: Location[]; operators: Operator[]; routes: RouteDef[] }
+    | undefined;
 }
 
-const catalog =
-  globalThis.__soka_catalog ??
-  (globalThis.__soka_catalog = {
+function seedCatalog() {
+  return {
     locations: [...LOCATIONS],
     operators: [...OPERATORS],
-  });
+    routes: DEFAULT_ROUTES.map((r) => ({ ...r, operatorIds: [...r.operatorIds] })),
+  };
+}
+
+const existing = globalThis.__soka_catalog;
+const catalog =
+  existing && Array.isArray(existing.routes)
+    ? existing
+    : (globalThis.__soka_catalog = {
+        locations: existing?.locations?.length ? existing.locations : [...LOCATIONS],
+        operators: existing?.operators?.length ? existing.operators : [...OPERATORS],
+        routes: seedCatalog().routes,
+      });
+
+/** @deprecated Prefer listRoutes() — kept for callers that still import ROUTES. */
+export const ROUTES: RouteDef[] = catalog.routes;
 
 export const listLocations = () => catalog.locations;
 export const listOperators = () => catalog.operators;
+export const listRoutes = () => catalog.routes;
 
 export const getLocationByCode = (code: string) =>
   catalog.locations.find((l) => l.code === code);
@@ -145,6 +167,25 @@ export function deleteOperator(id: string) {
   const i = catalog.operators.findIndex((o) => o.id === id);
   if (i >= 0) catalog.operators.splice(i, 1);
   return i >= 0;
+}
+
+/**
+ * Update the published base fare (USD whole dollars) for a route.
+ * Trip search uses this value exactly — no random price jitter.
+ */
+export function updateRouteBasePrice(key: string, basePrice: number): RouteDef | null {
+  const price = Math.round(basePrice);
+  if (!Number.isFinite(price) || price < 1) {
+    return null;
+  }
+
+  const route = catalog.routes.find((r) => routeKey(r) === key);
+  if (!route) {
+    return null;
+  }
+
+  route.basePrice = price;
+  return route;
 }
 
 export const FLIGHT_AMENITIES = ["wifi", "meal", "power", "entertainment"];

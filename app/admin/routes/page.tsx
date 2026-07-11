@@ -1,73 +1,140 @@
-import { Plane, Bus } from "lucide-react";
+"use client";
+
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Plane, Bus, Save } from "lucide-react";
 import { AdminHeader } from "@/components/admin/AdminHeader";
-import { Card, Badge } from "@/components/ui";
-import { ROUTES, getLocationByCode, getOperatorById } from "@/lib/data/catalog";
-import { formatDuration, formatMoney } from "@/lib/utils";
-import { getAdminRole } from "@/lib/auth";
+import { Card, Input, Spinner } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { formatMoneyDual, formatTzs, usdToTzsCash } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
+type AdminRouteRow = {
+  key: string;
+  mode: "flights" | "buses";
+  originCode: string;
+  destCode: string;
+  originCity: string;
+  destCity: string;
+  minutes: number;
+  daily: number;
+  basePrice: number;
+  basePriceTzs: number;
+  priceLabel: string;
+  operators: string[];
+};
 
-export default async function AdminRoutes() {
-  const role = await getAdminRole();
-  const routes =
-    role === "flights" ? ROUTES.filter((r) => r.mode === "flights")
-    : role === "buses" ? ROUTES.filter((r) => r.mode === "buses")
-    : ROUTES;
+export default function AdminRoutes() {
+  const qc = useQueryClient();
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
 
-  const subtitle =
-    role === "flights" ? "Flight routes operated by Air Tanzania"
-    : role === "buses" ? "Bus routes operated by Dar Express"
-    : "The network that powers schedule generation. Trips are generated per search date from these routes.";
+  const { data, isLoading } = useQuery<AdminRouteRow[]>({
+    queryKey: ["admin-routes"],
+    queryFn: async () => (await (await fetch("/api/v1/admin/routes")).json()).data,
+  });
+
+  const save = useMutation({
+    mutationFn: async ({ key, basePrice }: { key: string; basePrice: number }) => {
+      const res = await fetch("/api/v1/admin/routes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, basePrice }),
+      });
+      if (!res.ok) throw new Error("Save failed");
+      return res.json();
+    },
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ["admin-routes"] });
+      setDrafts((prev) => {
+        const next = { ...prev };
+        delete next[vars.key];
+        return next;
+      });
+    },
+  });
+
+  const rows = useMemo(() => data ?? [], [data]);
 
   return (
     <>
-      <AdminHeader title="Routes" subtitle={subtitle} />
+      <AdminHeader
+        title="Routes & fares"
+        subtitle="Set the published USD base fare for each route. Travellers see this exact price (USD + TZS) in search and booking — no random markup."
+      />
       <div className="p-6">
         <Card className="overflow-x-auto p-0">
-          <table className="w-full min-w-[680px] text-sm">
-            <thead>
-              <tr className="border-b border-line text-left text-[11px] uppercase tracking-wide text-muted">
-                <th className="px-4 py-3 font-medium">Mode</th>
-                <th className="px-4 py-3 font-medium">Route</th>
-                <th className="px-4 py-3 font-medium">Operators</th>
-                <th className="px-4 py-3 font-medium">Duration</th>
-                <th className="px-4 py-3 font-medium">Daily</th>
-                <th className="px-4 py-3 font-medium">From</th>
-              </tr>
-            </thead>
-            <tbody>
-              {routes.map((r, i) => {
-                const from = getLocationByCode(r.originCode);
-                const to = getLocationByCode(r.destCode);
-                return (
-                  <tr key={i} className="border-b border-line/60">
-                    <td className="px-4 py-3">
-                      {r.mode === "flights" ? (
-                        <Plane className="size-4 text-primary" />
-                      ) : (
-                        <Bus className="size-4 text-gold" />
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-title">
-                      {from?.city} → {to?.city}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="flex flex-wrap gap-1">
-                        {r.operatorIds.map((id) => (
-                          <Badge key={id} tone="neutral">
-                            {getOperatorById(id)?.name ?? id}
-                          </Badge>
-                        ))}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-subtitle">{formatDuration(r.minutes)}</td>
-                    <td className="px-4 py-3 text-subtitle">{r.daily}×</td>
-                    <td className="px-4 py-3 font-semibold text-title">{formatMoney(r.basePrice)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          {isLoading ? (
+            <div className="flex items-center gap-2 p-6 text-subtitle">
+              <Spinner /> Loading…
+            </div>
+          ) : (
+            <table className="w-full min-w-[780px] text-sm">
+              <thead>
+                <tr className="border-b border-line text-left text-[11px] uppercase tracking-wide text-muted">
+                  <th className="px-4 py-3 font-medium">Mode</th>
+                  <th className="px-4 py-3 font-medium">Route</th>
+                  <th className="px-4 py-3 font-medium">Operators</th>
+                  <th className="px-4 py-3 font-medium">Base fare (USD)</th>
+                  <th className="px-4 py-3 font-medium">TZS equiv.</th>
+                  <th className="px-4 py-3 font-medium"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => {
+                  const draft = drafts[r.key];
+                  const value = draft ?? String(r.basePrice);
+                  const parsed = Number(value);
+                  const dirty = draft != null && Number.isFinite(parsed) && parsed !== r.basePrice;
+                  const tzsPreview = Number.isFinite(parsed) && parsed > 0
+                    ? formatTzs(usdToTzsCash(parsed))
+                    : formatTzs(r.basePriceTzs);
+
+                  return (
+                    <tr key={r.key} className="border-b border-line/60">
+                      <td className="px-4 py-3">
+                        {r.mode === "flights" ? (
+                          <Plane className="size-4 text-primary" />
+                        ) : (
+                          <Bus className="size-4 text-gold" />
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-title">
+                        {r.originCity} → {r.destCity}
+                        <p className="text-[11px] text-muted">
+                          {r.originCode} → {r.destCode}
+                        </p>
+                      </td>
+                      <td className="px-4 py-3 text-subtitle">{r.operators.join(", ")}</td>
+                      <td className="px-4 py-3">
+                        <Input
+                          type="number"
+                          min={1}
+                          step={1}
+                          className="w-28"
+                          value={value}
+                          onChange={(e) =>
+                            setDrafts((prev) => ({ ...prev, [r.key]: e.target.value }))
+                          }
+                        />
+                      </td>
+                      <td className="px-4 py-3 font-medium text-title">
+                        {tzsPreview}
+                        <p className="text-[11px] font-normal text-muted">{formatMoneyDual(Number.isFinite(parsed) && parsed > 0 ? parsed : r.basePrice)}</p>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <Button
+                          size="sm"
+                          disabled={!dirty || save.isPending}
+                          onClick={() => save.mutate({ key: r.key, basePrice: parsed })}
+                        >
+                          <Save className="size-3.5" /> Save
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </Card>
       </div>
     </>

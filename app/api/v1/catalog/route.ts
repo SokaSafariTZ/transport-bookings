@@ -1,5 +1,6 @@
 import { ok } from "@/lib/api";
-import { listLocations, listOperators, ROUTES, getLocationByCode } from "@/lib/data/catalog";
+import { listLocations, listOperators, listRoutes, getLocationByCode } from "@/lib/data/catalog";
+import { formatMoneyDual } from "@/lib/utils";
 import type { TravelMode } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -16,11 +17,12 @@ export async function GET(req: Request) {
     : listLocations();
   const operators = mode ? listOperators().filter((o) => o.mode === mode) : listOperators();
 
-  const routes = ROUTES.filter((r) => (mode ? r.mode === mode : true)).map((r) => ({
+  const routes = listRoutes().filter((r) => (mode ? r.mode === mode : true)).map((r) => ({
     mode: r.mode,
     from: getLocationByCode(r.originCode),
     to: getLocationByCode(r.destCode),
     fromPrice: r.basePrice,
+    fromPriceLabel: formatMoneyDual(r.basePrice),
   }));
 
   return ok({ locations, operators, routes });

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Plane, Bus, Wifi, Zap, Snowflake, Armchair, Utensils, Tv, Clock } from "lucide-react";
 import { Card, Badge } from "@/components/ui";
 import { Button } from "@/components/ui/Button";
-import { formatDuration, formatMoney, formatTime } from "@/lib/utils";
+import { formatDuration, formatMoneyDual, formatTime } from "@/lib/utils";
 import type { TripWithRefs } from "@/lib/types";
 
 const AMENITY_ICON: Record<string, typeof Wifi> = {
@@ -64,7 +64,7 @@ export function TripCard({ trip, passengers }: { trip: TripWithRefs; passengers:
         {/* Price + CTA */}
         <div className="flex items-center justify-between gap-4 border-t border-line pt-3 sm:w-48 sm:flex-col sm:items-end sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
           <div className="text-right">
-            <p className="text-xl font-extrabold text-title">{formatMoney(trip.basePrice, trip.currency)}</p>
+            <p className="text-xl font-extrabold text-title">{formatMoneyDual(trip.basePrice)}</p>
             <p className="text-[11px] text-subtitle">per person</p>
           </div>
           <Button asChild size="sm">

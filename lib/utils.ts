@@ -14,6 +14,33 @@ export function formatMoney(amount: number, currency = "USD") {
   }).format(amount);
 }
 
+/** USD → TZS rate (matches Laravel wallet default when env unset). */
+export function usdToTzsRate(): number {
+  const raw =
+    process.env.NEXT_PUBLIC_USD_TO_TZS_RATE ??
+    process.env.USD_TO_TZS_RATE ??
+    "2500";
+  const rate = Number(raw);
+  return Number.isFinite(rate) && rate > 0 ? rate : 2500;
+}
+
+/** Round TZS to nearest 50 (circulating cash notes). */
+export function usdToTzsCash(usd: number): number {
+  const tzs = Math.round(usd * usdToTzsRate());
+  return Math.round(tzs / 50) * 50;
+}
+
+export function formatTzs(amount: number): string {
+  return `TZS ${new Intl.NumberFormat("en-TZ", { maximumFractionDigits: 0 }).format(amount)}`;
+}
+
+/** Show both USD and TZS for traveller-facing fares. */
+export function formatMoneyDual(usdAmount: number): string {
+  const usd = formatMoney(usdAmount, "USD");
+  const tzs = formatTzs(usdToTzsCash(usdAmount));
+  return `${usd} · ${tzs}`;
+}
+
 /** Duration in minutes -> "7h 20m" / "45m". */
 export function formatDuration(minutes: number) {
   const h = Math.floor(minutes / 60);

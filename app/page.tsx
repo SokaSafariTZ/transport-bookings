@@ -23,8 +23,8 @@ import { SiteFooter } from "@/components/SiteHeader";
 import { SearchForm } from "@/components/SearchForm";
 import { Card, Badge } from "@/components/ui";
 import { Button } from "@/components/ui/Button";
-import { ROUTES, getLocationByCode } from "@/lib/data/catalog";
-import { formatMoney } from "@/lib/utils";
+import { listRoutes, getLocationByCode } from "@/lib/data/catalog";
+import { formatMoneyDual } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Static data
@@ -146,7 +146,7 @@ const STATS = [
 ];
 
 export default function LandingPage() {
-  const popularRoutes = ROUTES.slice(0, 6).map((r) => ({
+  const popularRoutes = listRoutes().slice(0, 6).map((r) => ({
     mode: r.mode,
     from: getLocationByCode(r.originCode)!,
     to: getLocationByCode(r.destCode)!,
@@ -273,7 +273,7 @@ export default function LandingPage() {
                 Search flights &amp; buses
               </h2>
               <p className="mt-3 text-subtitle leading-relaxed">
-                Real-time schedules across {ROUTES.length} routes — Tanzania domestic, East Africa regional, and long-haul.
+                Real-time schedules across {listRoutes().length} routes — Tanzania domestic, East Africa regional, and long-haul.
                 Compare fares, pick your seat and pay in one flow.
               </p>
               <div className="mt-6 space-y-2">
@@ -339,7 +339,7 @@ export default function LandingPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-extrabold text-title">{formatMoney(r.price)}</p>
+                      <p className="font-extrabold text-title">{formatMoneyDual(r.price)}</p>
                       <p className="text-[11px] text-muted">from</p>
                     </div>
                   </Card>

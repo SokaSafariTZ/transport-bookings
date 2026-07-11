@@ -106,7 +106,7 @@ export async function createBooking(
       p.fareClass === "business" || p.fareClass === "vip"
         ? trip.mode === "flights"
           ? 2.6
-          : 1.5
+          : 1.6
         : p.fareClass === "first"
           ? 4.2
           : 1;
