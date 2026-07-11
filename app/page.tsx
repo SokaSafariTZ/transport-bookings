@@ -24,7 +24,7 @@ import { SearchForm } from "@/components/SearchForm";
 import { Card, Badge } from "@/components/ui";
 import { Button } from "@/components/ui/Button";
 import { listRoutes, getLocationByCode } from "@/lib/data/catalog";
-import { formatMoneyDual } from "@/lib/utils";
+import { Money } from "@/components/Money";
 
 // ---------------------------------------------------------------------------
 // Static data
@@ -339,7 +339,7 @@ export default function LandingPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-extrabold text-title">{formatMoneyDual(r.price)}</p>
+                      <p className="font-extrabold text-title"><Money amountUsd={r.price} /></p>
                       <p className="text-[11px] text-muted">from</p>
                     </div>
                   </Card>

@@ -3,7 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { Card, Badge, Spinner, Select, EmptyState } from "@/components/ui";
-import { formatMoney, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { useCurrency } from "@/lib/currency";
 import type { BookingDetail, BookingStatus } from "@/lib/types";
 
 async function fetchBookings(): Promise<BookingDetail[]> {
@@ -14,6 +15,7 @@ async function fetchBookings(): Promise<BookingDetail[]> {
 
 export default function AdminBookings() {
   const qc = useQueryClient();
+  const { formatAmount } = useCurrency();
   const { data, isLoading } = useQuery({ queryKey: ["admin-bookings"], queryFn: fetchBookings });
 
   const patch = useMutation({
@@ -95,7 +97,7 @@ export default function AdminBookings() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 font-semibold text-title">
-                      {formatMoney(b.totalAmount, b.currency)}
+                      {formatAmount(b.totalAmount)}
                     </td>
                     <td className="px-4 py-3">
                       <Select

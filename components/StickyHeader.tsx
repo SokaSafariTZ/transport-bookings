@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Ticket, Plane, Bus, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { CurrencySwitcher } from "@/components/CurrencySwitcher";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -74,6 +75,14 @@ export function StickyHeader() {
 
         {/* CTA */}
         <div className="flex items-center gap-2">
+          <CurrencySwitcher
+            compact
+            className={
+              scrolled
+                ? undefined
+                : "border-white/25 bg-white/10 [&_button]:text-white/80 [&_button[aria-pressed=true]]:bg-gold [&_button[aria-pressed=true]]:text-canvas"
+            }
+          />
           <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex">
             <Link href="/manage">
               <Ticket className="size-4" />

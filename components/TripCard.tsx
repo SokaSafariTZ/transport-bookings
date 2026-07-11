@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { Plane, Bus, Wifi, Zap, Snowflake, Armchair, Utensils, Tv, Clock } from "lucide-react";
 import { Card, Badge } from "@/components/ui";
 import { Button } from "@/components/ui/Button";
-import { formatDuration, formatMoneyDual, formatTime } from "@/lib/utils";
+import { formatDuration, formatTime } from "@/lib/utils";
+import { useCurrency } from "@/lib/currency";
 import type { TripWithRefs } from "@/lib/types";
 
 const AMENITY_ICON: Record<string, typeof Wifi> = {
@@ -15,11 +18,11 @@ const AMENITY_ICON: Record<string, typeof Wifi> = {
 };
 
 export function TripCard({ trip, passengers }: { trip: TripWithRefs; passengers: number }) {
+  const { formatAmount } = useCurrency();
   const Icon = trip.mode === "flights" ? Plane : Bus;
   return (
     <Card className="overflow-hidden p-4 transition hover:border-primary/40">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        {/* Operator */}
         <div className="flex items-center gap-3 sm:w-44">
           <span
             className="grid size-10 shrink-0 place-items-center rounded-[12px] text-white"
@@ -35,7 +38,6 @@ export function TripCard({ trip, passengers }: { trip: TripWithRefs; passengers:
           </div>
         </div>
 
-        {/* Timeline */}
         <div className="flex flex-1 items-center gap-4">
           <div className="text-center">
             <p className="text-lg font-bold text-title">{formatTime(trip.departAt)}</p>
@@ -61,10 +63,9 @@ export function TripCard({ trip, passengers }: { trip: TripWithRefs; passengers:
           </div>
         </div>
 
-        {/* Price + CTA */}
         <div className="flex items-center justify-between gap-4 border-t border-line pt-3 sm:w-48 sm:flex-col sm:items-end sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
           <div className="text-right">
-            <p className="text-xl font-extrabold text-title">{formatMoneyDual(trip.basePrice)}</p>
+            <p className="text-xl font-extrabold text-title">{formatAmount(trip.basePrice)}</p>
             <p className="text-[11px] text-subtitle">per person</p>
           </div>
           <Button asChild size="sm">

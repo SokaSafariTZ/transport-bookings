@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { Ticket, DollarSign, Building2, MapPin, Plane, Bus, TrendingUp } from "lucide-react";
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import { Money } from "@/components/Money";
 import { Card, Badge } from "@/components/ui";
 import { listBookings } from "@/lib/data/booking-store";
 import { listOperators, listLocations } from "@/lib/data/catalog";
-import { formatMoney, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import { getAdminRole } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -27,14 +28,14 @@ export default async function AdminDashboard() {
   const stats =
     role === "admin"
       ? [
-          { label: "Bookings", value: String(bookings.length), icon: Ticket, tone: "info" as const },
-          { label: "Revenue (paid)", value: formatMoney(revenue), icon: DollarSign, tone: "success" as const },
-          { label: "Operators", value: String(listOperators().length), icon: Building2, tone: "neutral" as const },
-          { label: "Locations", value: String(listLocations().length), icon: MapPin, tone: "neutral" as const },
+          { label: "Bookings", value: String(bookings.length), money: null as number | null, icon: Ticket, tone: "info" as const },
+          { label: "Revenue (paid)", value: null, money: revenue, icon: DollarSign, tone: "success" as const },
+          { label: "Operators", value: String(listOperators().length), money: null, icon: Building2, tone: "neutral" as const },
+          { label: "Locations", value: String(listLocations().length), money: null, icon: MapPin, tone: "neutral" as const },
         ]
       : [
-          { label: "Bookings", value: String(bookings.length), icon: Ticket, tone: "info" as const },
-          { label: "Revenue (paid)", value: formatMoney(revenue), icon: DollarSign, tone: "success" as const },
+          { label: "Bookings", value: String(bookings.length), money: null as number | null, icon: Ticket, tone: "info" as const },
+          { label: "Revenue (paid)", value: null, money: revenue, icon: DollarSign, tone: "success" as const },
         ];
 
   const subtitle =
@@ -53,7 +54,9 @@ export default async function AdminDashboard() {
                 <s.icon className="size-5 text-primary" />
                 <Badge tone={s.tone}>live</Badge>
               </div>
-              <p className="mt-3 text-2xl font-extrabold text-title">{s.value}</p>
+              <p className="mt-3 text-2xl font-extrabold text-title">
+                {s.money != null ? <Money amountUsd={s.money} /> : s.value}
+              </p>
               <p className="text-sm text-subtitle">{s.label}</p>
             </Card>
           ))}
@@ -96,7 +99,7 @@ export default async function AdminDashboard() {
                         </Badge>
                       </td>
                       <td className="py-2 text-right font-semibold text-title">
-                        {formatMoney(b.totalAmount, b.currency)}
+                        <Money amountUsd={b.totalAmount} />
                       </td>
                     </tr>
                   ))}

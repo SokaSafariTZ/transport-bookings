@@ -1,16 +1,19 @@
+"use client";
+
 import { Plane, Bus, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui";
-import { formatDate, formatTime, formatDuration, formatMoneyDual } from "@/lib/utils";
+import { formatDate, formatTime, formatDuration } from "@/lib/utils";
+import { useCurrency } from "@/lib/currency";
 import type { BookingDetail } from "@/lib/types";
 
 export function Ticket({ booking }: { booking: BookingDetail }) {
+  const { formatAmount } = useCurrency();
   const { trip } = booking;
   const Icon = trip.mode === "flights" ? Plane : Bus;
   const paid = booking.paymentStatus === "paid";
 
   return (
     <div className="overflow-hidden rounded-[24px] border border-line bg-card shadow-2xl">
-      {/* Header band */}
       <div
         className="flex items-center justify-between px-5 py-4 text-white"
         style={{ backgroundColor: trip.operator.logoColor }}
@@ -22,7 +25,6 @@ export function Ticket({ booking }: { booking: BookingDetail }) {
         <span className="font-mono text-sm opacity-90">{trip.serviceNumber}</span>
       </div>
 
-      {/* Route */}
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-5 py-6">
         <div>
           <p className="text-3xl font-extrabold text-title">{trip.origin.code}</p>
@@ -41,18 +43,16 @@ export function Ticket({ booking }: { booking: BookingDetail }) {
         </div>
       </div>
 
-      {/* Perforation */}
       <div className="relative border-t border-dashed border-line-strong">
         <span className="absolute -left-3 -top-3 size-6 rounded-full bg-canvas" />
         <span className="absolute -right-3 -top-3 size-6 rounded-full bg-canvas" />
       </div>
 
-      {/* Details */}
       <div className="grid grid-cols-2 gap-4 px-5 py-5 sm:grid-cols-4">
         <Detail label="PNR" value={booking.pnr} mono />
         <Detail label="Date" value={formatDate(trip.departAt)} />
         <Detail label="Travellers" value={String(booking.passengerCount)} />
-        <Detail label="Total" value={formatMoneyDual(booking.totalAmount)} />
+        <Detail label="Total" value={formatAmount(booking.totalAmount)} />
       </div>
 
       <div className="px-5 pb-5">

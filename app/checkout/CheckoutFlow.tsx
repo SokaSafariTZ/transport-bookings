@@ -7,7 +7,8 @@ import { CreditCard, Smartphone, Wallet, Lock } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { Card, Field, Input, Spinner, Badge } from "@/components/ui";
 import { Button } from "@/components/ui/Button";
-import { formatMoneyDual, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { useCurrency } from "@/lib/currency";
 
 const METHODS = [
   { key: "card", label: "Card", icon: CreditCard },
@@ -19,6 +20,7 @@ export function CheckoutFlow() {
   const router = useRouter();
   const ref = useSearchParams().get("ref") ?? "";
   const [method, setMethod] = useState<(typeof METHODS)[number]["key"]>("card");
+  const { formatAmount } = useCurrency();
 
   const { data: booking, isLoading } = useQuery({
     queryKey: ["booking", ref],
@@ -113,7 +115,7 @@ export function CheckoutFlow() {
           <div className="flex justify-between text-sm">
             <span className="text-subtitle">Total</span>
             <span className="text-lg font-bold text-title">
-              {formatMoneyDual(booking.totalAmount)}
+              {formatAmount(booking.totalAmount)}
             </span>
           </div>
           {pay.isError && (
@@ -124,7 +126,7 @@ export function CheckoutFlow() {
             disabled={pay.isPending}
             onClick={() => pay.mutate()}
           >
-            {pay.isPending ? <Spinner /> : `Pay ${formatMoneyDual(booking.totalAmount)}`}
+            {pay.isPending ? <Spinner /> : `Pay ${formatAmount(booking.totalAmount)}`}
           </Button>
         </Card>
       </aside>
