@@ -213,6 +213,17 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 alter table seat_reservations enable row level security;
 
+-- Admin-published route fares (USD). Survives Vercel cold starts so the mobile
+-- app catalog matches "My Routes" after Save.
+create table if not exists route_fare_overrides (
+  route_key text primary key,
+  base_price numeric(10,2) not null check (base_price >= 1),
+  updated_at timestamptz not null default now()
+);
+
+alter table route_fare_overrides enable row level security;
+-- No public policies: only the service-role API client reads/writes fares.
+
 -- Migration: trip_id was uuid FK in an earlier schema version; trips are now
 -- generated on-the-fly and never stored, so the column must be plain text.
 do $$ begin

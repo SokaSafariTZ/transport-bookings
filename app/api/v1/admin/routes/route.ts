@@ -1,11 +1,12 @@
 import { fail, ok, parseBody } from "@/lib/api";
 import { isAdminAuthed } from "@/lib/auth";
 import {
+  ensureRouteFaresHydrated,
   getLocationByCode,
   getOperatorById,
   listRoutes,
   routeKey,
-  updateRouteBasePrice,
+  updateRouteBasePricePersistent,
 } from "@/lib/data/catalog";
 import { formatMoneyDual, usdToTzsCash } from "@/lib/utils";
 import { routePricePatchSchema } from "@/lib/validation";
@@ -14,6 +15,8 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   if (!(await isAdminAuthed())) return fail("Unauthorized", 401);
+
+  await ensureRouteFaresHydrated();
 
   const mode = new URL(req.url).searchParams.get("mode");
   const routes = listRoutes()
@@ -47,7 +50,7 @@ export async function PATCH(req: Request) {
   const parsed = await parseBody(req, routePricePatchSchema);
   if ("response" in parsed) return parsed.response;
 
-  const updated = updateRouteBasePrice(parsed.data.key, parsed.data.basePrice);
+  const updated = await updateRouteBasePricePersistent(parsed.data.key, parsed.data.basePrice);
   if (!updated) return fail("Route not found or invalid price", 404);
 
   return ok({

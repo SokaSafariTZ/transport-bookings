@@ -172,6 +172,7 @@ export function deleteOperator(id: string) {
 /**
  * Update the published base fare (USD whole dollars) for a route.
  * Trip search uses this value exactly — no random price jitter.
+ * Also persists to Supabase when configured so all Vercel instances + the app agree.
  */
 export function updateRouteBasePrice(key: string, basePrice: number): RouteDef | null {
   const price = Math.round(basePrice);
@@ -186,6 +187,64 @@ export function updateRouteBasePrice(key: string, basePrice: number): RouteDef |
 
   route.basePrice = price;
   return route;
+}
+
+let fareHydratePromise: Promise<void> | null = null;
+let lastFareHydrateAt = 0;
+const FARE_HYDRATE_TTL_MS = 10_000;
+
+/**
+ * Apply durable admin fare overrides into the in-memory catalog.
+ * Call from API handlers before reading routes / building trips.
+ * Re-reads from Supabase every few seconds so admin Save is visible on the app quickly.
+ */
+export async function ensureRouteFaresHydrated(): Promise<void> {
+  const now = Date.now();
+  if (fareHydratePromise) return fareHydratePromise;
+  if (lastFareHydrateAt > 0 && now - lastFareHydrateAt < FARE_HYDRATE_TTL_MS) {
+    return;
+  }
+
+  fareHydratePromise = (async () => {
+    try {
+      const { loadRouteFareOverrides } = await import("@/lib/data/route-fare-overrides");
+      const overrides = await loadRouteFareOverrides();
+      for (const route of catalog.routes) {
+        const key = routeKey(route);
+        const next = overrides[key];
+        if (typeof next === "number" && Number.isFinite(next) && next >= 1) {
+          route.basePrice = Math.round(next);
+        }
+      }
+      lastFareHydrateAt = Date.now();
+    } catch (e) {
+      console.warn("[catalog] fare hydrate failed", e);
+    } finally {
+      fareHydratePromise = null;
+    }
+  })();
+
+  return fareHydratePromise;
+}
+
+/** Memory update + durable persist (admin Save). */
+export async function updateRouteBasePricePersistent(
+  key: string,
+  basePrice: number,
+): Promise<RouteDef | null> {
+  await ensureRouteFaresHydrated();
+  const updated = updateRouteBasePrice(key, basePrice);
+  if (!updated) return null;
+
+  try {
+    const { saveRouteFareOverride } = await import("@/lib/data/route-fare-overrides");
+    await saveRouteFareOverride(routeKey(updated), updated.basePrice);
+    lastFareHydrateAt = Date.now();
+  } catch (e) {
+    console.warn("[catalog] fare persist failed", e);
+  }
+
+  return updated;
 }
 
 export const FLIGHT_AMENITIES = ["wifi", "meal", "power", "entertainment"];

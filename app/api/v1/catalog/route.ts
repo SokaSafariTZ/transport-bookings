@@ -1,5 +1,11 @@
 import { ok } from "@/lib/api";
-import { listLocations, listOperators, listRoutes, getLocationByCode } from "@/lib/data/catalog";
+import {
+  ensureRouteFaresHydrated,
+  listLocations,
+  listOperators,
+  listRoutes,
+  getLocationByCode,
+} from "@/lib/data/catalog";
 import { formatMoneyDual } from "@/lib/utils";
 import type { TravelMode } from "@/lib/types";
 
@@ -9,6 +15,8 @@ export const dynamic = "force-dynamic";
 // Returns the locations, operators and popular routes for a mode — powers the
 // search form's autocomplete and the "popular routes" rails.
 export async function GET(req: Request) {
+  await ensureRouteFaresHydrated();
+
   const mode = new URL(req.url).searchParams.get("mode") as TravelMode | null;
 
   const locationType = mode === "buses" ? "bus_terminal" : mode === "flights" ? "airport" : null;

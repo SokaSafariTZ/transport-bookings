@@ -1,4 +1,5 @@
 import { fail, ok } from "@/lib/api";
+import { ensureRouteFaresHydrated } from "@/lib/data/catalog";
 import { getTrip, getFares, getSeatMap } from "@/lib/data/trips";
 
 export const dynamic = "force-dynamic";
@@ -7,6 +8,8 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  await ensureRouteFaresHydrated();
+
   const { id } = await params;
   const trip = getTrip(id);
   if (!trip) return fail("Trip not found", 404);

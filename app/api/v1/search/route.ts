@@ -1,4 +1,5 @@
 import { fail, ok } from "@/lib/api";
+import { ensureRouteFaresHydrated } from "@/lib/data/catalog";
 import { searchTrips } from "@/lib/data/trips";
 import type { TravelMode } from "@/lib/types";
 
@@ -6,6 +7,8 @@ export const dynamic = "force-dynamic";
 
 // GET /api/v1/search?mode=flights&from=NBO&to=CMN&date=2026-07-01&passengers=1
 export async function GET(req: Request) {
+  await ensureRouteFaresHydrated();
+
   const p = new URL(req.url).searchParams;
   const mode = p.get("mode") as TravelMode | null;
   const from = p.get("from");
