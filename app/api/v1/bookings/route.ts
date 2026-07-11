@@ -17,6 +17,9 @@ export async function POST(req: Request) {
     if (e?.constructor?.name === "SeatConflictError" || e?.seatNumber) {
       return fail(`Seat ${e.seatNumber} is no longer available. Please choose a different seat.`, 409);
     }
+    if (e instanceof Error && e.message && !e.message.includes("Trip not found")) {
+      return fail(e.message, 422);
+    }
     throw e;
   }
 }

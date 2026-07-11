@@ -113,6 +113,15 @@ export async function createBooking(
     return sum + Math.round(trip.basePrice * mult);
   }, 0);
 
+  // bookings.user_id is auth.users UUID — ignore Laravel numeric ids / invalid values.
+  const userId =
+    typeof input.userId === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      input.userId,
+    )
+      ? input.userId
+      : null;
+
   // Insert booking row
   const { data: bData, error: bErr } = await sb
     .from("bookings")
@@ -120,7 +129,7 @@ export async function createBooking(
       pnr,
       mode: trip.mode,
       trip_id: trip.id,
-      user_id: input.userId ?? null,
+      user_id: userId,
       contact_email: input.contactEmail,
       contact_phone: input.contactPhone,
       status: "pending",
@@ -134,7 +143,7 @@ export async function createBooking(
 
   if (bErr || !bData) {
     console.error("[supabase/store] createBooking error:", bErr?.message);
-    return null;
+    throw new Error(bErr?.message ?? "Could not save booking. Try again.");
   }
 
   const booking = rowToBooking(bData as BookingRow);
