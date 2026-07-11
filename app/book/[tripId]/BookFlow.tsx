@@ -11,6 +11,14 @@ import { SeatMap } from "@/components/SeatMap";
 import { formatDuration, formatTime, formatDate } from "@/lib/utils";
 import { useCurrency } from "@/lib/currency";
 import type { FareClass } from "@/lib/types";
+import {
+  sanitizeDocumentNumber,
+  sanitizeEmail,
+  sanitizeNationality,
+  sanitizePersonNameInput,
+  sanitizePhone,
+  validateBookingFormFields,
+} from "@/lib/validation";
 
 interface PassengerForm {
   fullName: string;
@@ -43,6 +51,13 @@ export function BookFlow({ tripId }: { tripId: string }) {
     Array.from({ length: paxCount }, () => ({ ...empty })),
   );
   const [contact, setContact] = useState({ email: "", phone: "" });
+  const [fieldErrors, setFieldErrors] = useState<{
+    contact?: { email?: string; phone?: string };
+    passengers: Record<
+      number,
+      Partial<Record<"fullName" | "documentNumber" | "nationality", string>>
+    >;
+  }>({ passengers: {} });
 
   const fare = useMemo(
     () => data?.fares.find((f) => f.fareClass === fareClass) ?? data?.fares[0],
@@ -58,13 +73,19 @@ export function BookFlow({ tripId }: { tripId: string }) {
     mutationFn: () =>
       api.createBooking({
         tripId,
-        contactEmail: contact.email,
-        contactPhone: contact.phone,
-        passengers: pax.map((p, i) => ({
-          ...p,
-          fareClass: fare!.fareClass,
-          seatNumber: seats[i],
-        })),
+        contactEmail: sanitizeEmail(contact.email),
+        contactPhone: sanitizePhone(contact.phone),
+        passengers: pax.map((p, i) => {
+          const nationality = sanitizeNationality(p.nationality);
+          return {
+            fullName: p.fullName.trim(),
+            documentType: p.documentType,
+            documentNumber: sanitizeDocumentNumber(p.documentNumber, p.documentType, nationality),
+            nationality,
+            fareClass: fare!.fareClass,
+            seatNumber: seats[i],
+          };
+        }),
       }),
     onSuccess: (booking) => router.push(`/checkout?ref=${booking.pnr}`),
   });
@@ -83,9 +104,9 @@ export function BookFlow({ tripId }: { tripId: string }) {
   const canSubmit =
     fare &&
     seats.length === paxCount &&
-    pax.every((p) => p.fullName && p.documentNumber && p.nationality) &&
-    contact.email &&
-    contact.phone;
+    pax.every((p) => p.fullName.trim() && p.documentNumber.trim() && p.nationality.trim()) &&
+    contact.email.trim() &&
+    contact.phone.trim();
 
   function toggleSeat(n: string) {
     setSeats((prev) =>
@@ -95,6 +116,23 @@ export function BookFlow({ tripId }: { tripId: string }) {
           ? [...prev, n]
           : prev,
     );
+  }
+
+  function submitBooking() {
+    const validated = validateBookingFormFields({
+      contactEmail: contact.email,
+      contactPhone: contact.phone,
+      passengers: pax,
+    });
+    if (!validated.ok) {
+      setFieldErrors({
+        contact: validated.contact,
+        passengers: validated.passengers,
+      });
+      return;
+    }
+    setFieldErrors({ passengers: {} });
+    create.mutate();
   }
 
   return (
@@ -181,35 +219,71 @@ export function BookFlow({ tripId }: { tripId: string }) {
                 Traveller {i + 1} {seats[i] && <span className="text-primary">· seat {seats[i]}</span>}
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Full name">
+                <Field label="Full name" error={fieldErrors.passengers[i]?.fullName}>
                   <Input
                     value={p.fullName}
-                    onChange={(e) => updatePax(i, { fullName: e.target.value })}
+                    onChange={(e) => updatePax(i, { fullName: sanitizePersonNameInput(e.target.value) })}
                     placeholder="As on travel document"
+                    autoComplete="name"
+                    maxLength={120}
                   />
                 </Field>
-                <Field label="Nationality">
+                <Field label="Nationality (ISO)" error={fieldErrors.passengers[i]?.nationality}>
                   <Input
                     value={p.nationality}
-                    onChange={(e) => updatePax(i, { nationality: e.target.value })}
-                    placeholder="e.g. Kenyan"
+                    onChange={(e) =>
+                      updatePax(i, {
+                        nationality: sanitizeNationality(e.target.value),
+                        documentNumber: sanitizeDocumentNumber(
+                          p.documentNumber,
+                          p.documentType,
+                          sanitizeNationality(e.target.value),
+                        ),
+                      })
+                    }
+                    placeholder="e.g. TZ"
+                    maxLength={2}
+                    autoCapitalize="characters"
                   />
                 </Field>
                 <Field label="Document type">
                   <Select
                     value={p.documentType}
-                    onChange={(e) =>
-                      updatePax(i, { documentType: e.target.value as PassengerForm["documentType"] })
-                    }
+                    onChange={(e) => {
+                      const documentType = e.target.value as PassengerForm["documentType"];
+                      updatePax(i, {
+                        documentType,
+                        documentNumber: sanitizeDocumentNumber(
+                          p.documentNumber,
+                          documentType,
+                          p.nationality,
+                        ),
+                      });
+                    }}
                   >
                     <option value="passport">Passport</option>
                     <option value="national_id">National ID</option>
                   </Select>
                 </Field>
-                <Field label="Document number">
+                <Field label="Document number" error={fieldErrors.passengers[i]?.documentNumber}>
                   <Input
                     value={p.documentNumber}
-                    onChange={(e) => updatePax(i, { documentNumber: e.target.value })}
+                    onChange={(e) =>
+                      updatePax(i, {
+                        documentNumber: sanitizeDocumentNumber(
+                          e.target.value,
+                          p.documentType,
+                          p.nationality,
+                        ),
+                      })
+                    }
+                    placeholder={
+                      p.documentType === "national_id" && p.nationality === "TZ"
+                        ? "20-digit NIDA"
+                        : "e.g. AB1234567"
+                    }
+                    maxLength={p.documentType === "national_id" && p.nationality === "TZ" ? 20 : 12}
+                    autoCapitalize="characters"
                   />
                 </Field>
               </div>
@@ -221,17 +295,27 @@ export function BookFlow({ tripId }: { tripId: string }) {
               Contact details
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Email">
+              <Field label="Email" error={fieldErrors.contact?.email}>
                 <Input
                   type="email"
                   value={contact.email}
-                  onChange={(e) => setContact((c) => ({ ...c, email: e.target.value }))}
+                  onChange={(e) =>
+                    setContact((c) => ({ ...c, email: sanitizeEmail(e.target.value) }))
+                  }
+                  autoComplete="email"
+                  maxLength={255}
                 />
               </Field>
-              <Field label="Phone">
+              <Field label="Phone" error={fieldErrors.contact?.phone}>
                 <Input
                   value={contact.phone}
-                  onChange={(e) => setContact((c) => ({ ...c, phone: e.target.value }))}
+                  onChange={(e) =>
+                    setContact((c) => ({ ...c, phone: sanitizePhone(e.target.value) }))
+                  }
+                  placeholder="+255712345678"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  maxLength={16}
                 />
               </Field>
             </div>
@@ -255,7 +339,7 @@ export function BookFlow({ tripId }: { tripId: string }) {
           <Button
             className="mt-4 w-full"
             disabled={!canSubmit || create.isPending}
-            onClick={() => create.mutate()}
+            onClick={submitBooking}
           >
             {create.isPending ? <Spinner /> : "Continue to payment"}
           </Button>
@@ -271,6 +355,19 @@ export function BookFlow({ tripId }: { tripId: string }) {
 
   function updatePax(i: number, patch: Partial<PassengerForm>) {
     setPax((prev) => prev.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
+    setFieldErrors((prev) => {
+      if (!prev.passengers[i]) return prev;
+      const nextPax = { ...prev.passengers };
+      const cleared = { ...nextPax[i] };
+      for (const key of Object.keys(patch) as Array<keyof PassengerForm>) {
+        if (key === "fullName" || key === "documentNumber" || key === "nationality") {
+          delete cleared[key];
+        }
+      }
+      if (Object.keys(cleared).length === 0) delete nextPax[i];
+      else nextPax[i] = cleared;
+      return { ...prev, passengers: nextPax };
+    });
   }
 }
 

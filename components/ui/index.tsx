@@ -81,15 +81,18 @@ export function Field({
   label,
   children,
   className,
+  error,
 }: {
   label: string;
   children: React.ReactNode;
   className?: string;
+  error?: string;
 }) {
   return (
     <div className={className}>
       <Label>{label}</Label>
       {children}
+      {error ? <p className="mt-1 text-xs text-danger">{error}</p> : null}
     </div>
   );
 }
