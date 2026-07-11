@@ -7,6 +7,7 @@ import { AdminHeader } from "@/components/admin/AdminHeader";
 import { Card, Input, Spinner } from "@/components/ui";
 import { Button } from "@/components/ui/Button";
 import { formatMoneyDual, formatTzs, usdToTzsCash } from "@/lib/utils";
+import { useCurrency } from "@/lib/currency";
 
 type AdminRouteRow = {
   key: string;
@@ -25,6 +26,7 @@ type AdminRouteRow = {
 
 export default function AdminRoutes() {
   const qc = useQueryClient();
+  const { usdToTzs } = useCurrency();
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   const { data, isLoading } = useQuery<AdminRouteRow[]>({
@@ -85,8 +87,8 @@ export default function AdminRoutes() {
                   const parsed = Number(value);
                   const dirty = draft != null && Number.isFinite(parsed) && parsed !== r.basePrice;
                   const tzsPreview = Number.isFinite(parsed) && parsed > 0
-                    ? formatTzs(usdToTzsCash(parsed))
-                    : formatTzs(r.basePriceTzs);
+                    ? formatTzs(usdToTzsCash(parsed, usdToTzs))
+                    : formatTzs(usdToTzsCash(r.basePrice, usdToTzs));
 
                   return (
                     <tr key={r.key} className="border-b border-line/60">
@@ -118,7 +120,9 @@ export default function AdminRoutes() {
                       </td>
                       <td className="px-4 py-3 font-medium text-title">
                         {tzsPreview}
-                        <p className="text-[11px] font-normal text-muted">{formatMoneyDual(Number.isFinite(parsed) && parsed > 0 ? parsed : r.basePrice)}</p>
+                        <p className="text-[11px] font-normal text-muted">
+                          {formatMoneyDual(Number.isFinite(parsed) && parsed > 0 ? parsed : r.basePrice, usdToTzs)}
+                        </p>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <Button

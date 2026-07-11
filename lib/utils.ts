@@ -14,7 +14,7 @@ export function formatMoney(amount: number, currency = "USD") {
   }).format(amount);
 }
 
-/** USD → TZS rate (matches Laravel wallet default when env unset). */
+/** USD → TZS rate (fallback when live FX unavailable). */
 export function usdToTzsRate(): number {
   const raw =
     process.env.NEXT_PUBLIC_USD_TO_TZS_RATE ??
@@ -25,8 +25,9 @@ export function usdToTzsRate(): number {
 }
 
 /** Round TZS to nearest 50 (circulating cash notes). */
-export function usdToTzsCash(usd: number): number {
-  const tzs = Math.round(usd * usdToTzsRate());
+export function usdToTzsCash(usd: number, rate: number = usdToTzsRate()): number {
+  const safeRate = Number.isFinite(rate) && rate > 0 ? rate : usdToTzsRate();
+  const tzs = Math.round(usd * safeRate);
   return Math.round(tzs / 50) * 50;
 }
 
@@ -35,9 +36,9 @@ export function formatTzs(amount: number): string {
 }
 
 /** Show both USD and TZS for traveller-facing fares. */
-export function formatMoneyDual(usdAmount: number): string {
+export function formatMoneyDual(usdAmount: number, rate?: number): string {
   const usd = formatMoney(usdAmount, "USD");
-  const tzs = formatTzs(usdToTzsCash(usdAmount));
+  const tzs = formatTzs(usdToTzsCash(usdAmount, rate));
   return `${usd} · ${tzs}`;
 }
 
