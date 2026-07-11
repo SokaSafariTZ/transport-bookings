@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { Card, Badge, Spinner, Select, EmptyState } from "@/components/ui";
@@ -32,7 +33,10 @@ export default function AdminBookings() {
 
   return (
     <>
-      <AdminHeader title="Bookings" subtitle="All reservations across flights & buses" />
+      <AdminHeader
+        title="Bookings"
+        subtitle="All reservations across flights & buses — open a row for the full ticket"
+      />
       <div className="p-6">
         {isLoading ? (
           <div className="flex items-center gap-2 text-subtitle">
@@ -57,29 +61,50 @@ export default function AdminBookings() {
               </thead>
               <tbody>
                 {data.map((b) => (
-                  <tr key={b.id} className="border-b border-line/60 hover:bg-muted/30 transition-colors">
+                  <tr key={b.id} className="border-b border-line/60 transition-colors hover:bg-muted/30">
                     <td className="px-4 py-3">
-                      <span className="font-mono font-bold text-primary">{b.pnr}</span>
-                      <div className="text-[10px] text-muted capitalize mt-0.5">{b.mode}</div>
+                      <Link
+                        href={`/admin/bookings/${encodeURIComponent(b.pnr)}`}
+                        className="font-mono font-bold text-primary hover:underline"
+                      >
+                        {b.pnr}
+                      </Link>
+                      <div className="mt-0.5 text-[10px] capitalize text-muted">{b.mode}</div>
+                      <Link
+                        href={`/admin/bookings/${encodeURIComponent(b.pnr)}`}
+                        className="mt-1 inline-block text-[11px] font-semibold text-primary/80 hover:underline"
+                      >
+                        View ticket →
+                      </Link>
                     </td>
-                    <td className="px-4 py-3 text-title font-medium">
-                      {b.trip.origin.city} ({b.trip.origin.code})
-                      <span className="text-muted mx-1">→</span>
-                      {b.trip.destination.city} ({b.trip.destination.code})
+                    <td className="px-4 py-3 font-medium text-title">
+                      <Link
+                        href={`/admin/bookings/${encodeURIComponent(b.pnr)}`}
+                        className="hover:text-primary"
+                      >
+                        {b.trip.origin.city} ({b.trip.origin.code})
+                        <span className="mx-1 text-muted">→</span>
+                        {b.trip.destination.city} ({b.trip.destination.code})
+                      </Link>
                     </td>
-                    <td className="px-4 py-3 text-subtitle whitespace-nowrap">
+                    <td className="whitespace-nowrap px-4 py-3 text-subtitle">
                       {formatDate(b.trip.departAt)}
                       <div className="text-[11px] text-muted">
-                        {new Date(b.trip.departAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(b.trip.departAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       {b.passengers.length > 0 ? (
                         <div className="space-y-0.5">
                           {b.passengers.map((p) => (
-                            <div key={p.id} className="text-title text-[13px]">
+                            <div key={p.id} className="text-[13px] text-title">
                               {p.fullName}
-                              <span className="text-muted ml-1 capitalize text-[11px]">· {p.fareClass}</span>
+                              <span className="ml-1 text-[11px] capitalize text-muted">
+                                · {p.fareClass}
+                              </span>
                             </div>
                           ))}
                         </div>
@@ -87,7 +112,7 @@ export default function AdminBookings() {
                         <span className="text-muted">{b.passengerCount} pax</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-subtitle text-[12px]">
+                    <td className="px-4 py-3 text-[12px] text-subtitle">
                       <div>{b.contactEmail}</div>
                       <div className="text-muted">{b.contactPhone}</div>
                     </td>
@@ -105,7 +130,10 @@ export default function AdminBookings() {
                         className="h-9 w-36"
                         disabled={patch.isPending}
                         onChange={(e) =>
-                          patch.mutate({ ref: b.pnr, status: e.target.value as BookingStatus })
+                          patch.mutate({
+                            ref: b.pnr,
+                            status: e.target.value as BookingStatus,
+                          })
                         }
                       >
                         <option value="pending">Pending</option>

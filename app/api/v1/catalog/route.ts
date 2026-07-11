@@ -31,6 +31,7 @@ export async function GET(req: Request) {
     to: getLocationByCode(r.destCode),
     fromPrice: r.basePrice,
     fromPriceLabel: formatMoneyDual(r.basePrice),
+    operatorIds: [...r.operatorIds],
   }));
 
   return ok({ locations, operators, routes });
